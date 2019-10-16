@@ -197,6 +197,7 @@ int main(int argc, char** argv)
         sum_eSq += pow(e,2);
       } //loop over measurements
       
+      //Write binned measurements to file:
       N_meas = params->measPerBin_;
       fout_bins << (i+1)                << '\t'
                 << sum_e/(1.0*N_meas)   << '\t'
@@ -206,12 +207,23 @@ int main(int argc, char** argv)
       
       printDoubleArray( alpha_A, "alpha_A", Lx);
       std::cout << std::endl;
-      /*
+      //Write current spin configuration to file:
       if( params->printSpins_ )
-      { model->writeSpins(); }
+      {
+        //Print the spins in sublattice A:
+        for(uint iA=0; iA<Lx; iA++)
+        { fout_spins << alpha_A[iA] << " ";  }
+        
+        //Print the spins in sublattice B:
+        for(uint iB=0; iB<Lx; iB++)
+        { fout_spins << alpha_B[iB] << " ";  }
+        fout_spins << std::endl;
+      }
+      
+      
       if( (i+1)%100==0 )
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
-      */
+      
     } //loop over bins
     
     std::cout << std::endl;
