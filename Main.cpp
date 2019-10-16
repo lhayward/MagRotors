@@ -45,6 +45,8 @@ double       r_AB_y;      //y-component of r_AB (same for all pairs)
 double*      alpha_A;     //array of angles corresponding to the magnets in sublattice A
 double*      alpha_B;     //array of angles corresponding to the magnets in sublattice A
 double       T;           //current temperature
+std::string  T_str;       //T as a string
+double dummy;
 
 /**********************************************************************************************
 ******************************************** main *********************************************
@@ -63,11 +65,13 @@ int main(int argc, char** argv)
   time_t       sec1, sec2;  //for timing
   
   //Variables related to input/output data from/to files:
-  std::string fileSuffix         = getFileSuffix( argc, argv );
-  std::string paramFileName      = "params" + fileSuffix + ".txt";
-  std::string simParamStr        = "SIMULATION PARAMETERS";
-  std::string outFileName        = "bins" + fileSuffix + ".txt";
-  std::string spinConfigFileName = "spinConfigs" + fileSuffix + ".txt";
+  std::string   fileSuffix       = getFileSuffix( argc, argv );
+  std::string   paramFileName    = "params" + fileSuffix + ".txt";
+  std::string   simParamStr      = "SIMULATION PARAMETERS";
+  std::string   binsFileName;
+  std::string   spinsFileName;
+  std::ofstream fout_bins;
+  std::ofstream fout_spins;
   
   //Read in parameters from file:
   std::cout.precision(8);
@@ -77,8 +81,9 @@ int main(int argc, char** argv)
   params->print();
   
   //Variables that store observables:
-  double E;            //current energy
-  double sumE, sumESq; //sums of E and E^2 over measurements
+  uint   N_meas;        //number of measurements averaged over
+  double e;              //current energy per spin
+  double sum_e, sum_eSq; //sums of e and e^2 over measurements
   
   //Define other parameters based on the ones read from file:
   N_spins = 2*Lx;
@@ -154,6 +159,21 @@ int main(int argc, char** argv)
     std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
               << std::endl;
     
+    T_str = std::to_string(T);
+    
+    //Open file to write bins:
+    binsFileName = "bins" + fileSuffix + "_T" + T_str + ".txt";
+    fout_bins.open(binsFileName);
+    fout_bins.precision(15);
+    fout_bins << "# binNum \t E \t ESq" << std::endl;
+    
+    if( params->printSpins_ )
+    {
+      spinsFileName = "spins" + fileSuffix + "_T" + T_str + ".txt";
+      fout_spins.open(spinsFileName);
+      fout_spins.precision(15);
+    }
+    
     //equilibrate:
     for( uint i=0; i<params->numWarmUpSweeps_; i++ )
     { sweep( params->randomGen_, N_spins ); }
@@ -162,8 +182,8 @@ int main(int argc, char** argv)
     //loop over Monte Carlo bins:
     for( uint i=0; i<params->numBins_; i++ )
     {
-      sumE = 0;
-      sumESq = 0;
+      sum_e = 0;
+      sum_eSq = 0;
       //perform the measurements for one bin:
       for( uint j=0; j<params->measPerBin_; j++ )
       {
@@ -172,16 +192,20 @@ int main(int argc, char** argv)
         { sweep( params->randomGen_, N_spins ); }
         
         //make energy measurements:
-        E = getEnergy();
-        sumE += E;
-        sumESq += pow(E,2);
+        e = getEnergy()/(1.0*N_spins);
+        sum_e   += e;
+        sum_eSq += pow(e,2);
       } //loop over measurements
       
-      printDoubleArray( alpha_A, "alpha_A", Lx);
-      //model->writeBin((i+1), params->measPerBin_, params->sweepsPerMeas_);
-      std::cout << "sumE = "   << sumE   << std::endl;
-      std::cout << "sumESq = " << sumESq << std::endl << std::endl;
+      N_meas = params->measPerBin_;
+      fout_bins << (i+1)                << '\t'
+                << sum_e/(1.0*N_meas)   << '\t'
+                << sum_eSq/(1.0*N_meas) << std::endl;
+      std::cout << "sum_e = "   << sum_e   << std::endl;
+      std::cout << "sum_eSq = " << sum_eSq << std::endl << std::endl;
       
+      printDoubleArray( alpha_A, "alpha_A", Lx);
+      std::cout << std::endl;
       /*
       if( params->printSpins_ )
       { model->writeSpins(); }
@@ -191,6 +215,10 @@ int main(int argc, char** argv)
     } //loop over bins
     
     std::cout << std::endl;
+    fout_bins.close();
+    
+    if( params->printSpins_ )
+    { fout_spins.close(); }
   } //temperature loop
   
   sec2 = time(NULL);
@@ -202,7 +230,8 @@ int main(int argc, char** argv)
 /*************************************** getEnergy ****************************************/
 double getEnergy()
 {
-  return 0;
+  dummy++;
+  return dummy;
 }
 
 /*************************************** getFileSuffix ****************************************/
