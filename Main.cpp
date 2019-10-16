@@ -24,14 +24,15 @@ typedef unsigned long ulong;
 typedef unsigned int  uint;
 
 
-//function definitions:
+//Function definitions:
+double      getEnergy();
 std::string getFileSuffix(int argc, char** argv);
 void        localUpdate(MTRand &randomGen);
-void        printDoubleArray( double* arr, uint len );
+void        printDoubleArray( double* arr, std::string name, uint len );
 void        print2DDoubleArray( double** arr, uint L1, uint L2 );
 void        sweep(MTRand &randomGen, uint N);
 
-//global variables:
+//Global variables:
 double       d;           //distance between the centres of magnets
 double       q;           //magnitude of the magnetic charge at the tip of each rod
 double       m;           //magnitude of magnetic moment
@@ -74,6 +75,10 @@ int main(int argc, char** argv)
   params = new SimParams( paramFileName, simParamStr );
   Lx     = params->Lx_;
   params->print();
+  
+  //Variables that store observables:
+  double E;            //current energy
+  double sumE, sumESq; //sums of E and E^2 over measurements
   
   //Define other parameters based on the ones read from file:
   N_spins = 2*Lx;
@@ -138,8 +143,6 @@ int main(int argc, char** argv)
     alpha_B[i] = params->randomGen_.randDblExc( 2*PI );
   }
   
-  printDoubleArray(alpha_A,Lx);
-  
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
   sec1 = time (NULL);
   
@@ -155,27 +158,37 @@ int main(int argc, char** argv)
     for( uint i=0; i<params->numWarmUpSweeps_; i++ )
     { sweep( params->randomGen_, N_spins ); }
     
-    /*
+    
     //loop over Monte Carlo bins:
     for( uint i=0; i<params->numBins_; i++ )
     {
-      model->zeroMeasurements();
+      sumE = 0;
+      sumESq = 0;
       //perform the measurements for one bin:
       for( uint j=0; j<params->measPerBin_; j++ )
       {
         //perform the sweeps for one measurement:
         for( uint k=0; k<params->sweepsPerMeas_; k++ )
-        { model->sweep( params->randomGen_, false ); }
-        model->makeMeasurement();
+        { sweep( params->randomGen_, N_spins ); }
+        
+        //make energy measurements:
+        E = getEnergy();
+        sumE += E;
+        sumESq += pow(E,2);
       } //loop over measurements
-      model->writeBin((i+1), params->measPerBin_, params->sweepsPerMeas_);
       
+      printDoubleArray( alpha_A, "alpha_A", Lx);
+      //model->writeBin((i+1), params->measPerBin_, params->sweepsPerMeas_);
+      std::cout << "sumE = "   << sumE   << std::endl;
+      std::cout << "sumESq = " << sumESq << std::endl << std::endl;
+      
+      /*
       if( params->printSpins_ )
       { model->writeSpins(); }
       if( (i+1)%100==0 )
       { std::cout << (i+1) << " Bins Complete" << std::endl; }
+      */
     } //loop over bins
-    */
     
     std::cout << std::endl;
   } //temperature loop
@@ -185,6 +198,12 @@ int main(int argc, char** argv)
   std::cout << "\n*** END OF SIMULATION ***\n" << std::endl;
   return 0;
 } //closes main
+
+/*************************************** getEnergy ****************************************/
+double getEnergy()
+{
+  return 0;
+}
 
 /*************************************** getFileSuffix ****************************************/
 std::string getFileSuffix(int argc, char** argv)
@@ -201,13 +220,12 @@ std::string getFileSuffix(int argc, char** argv)
 void localUpdate(MTRand &randomGen)
 {
   double r = randomGen.randDblExc();
-  std::cout << alpha_A[0] << std::endl;
 }
 
 /************************************** printDoubleArray **************************************/
-void printDoubleArray( double* arr, uint len )
+void printDoubleArray( double* arr, std::string name, uint len )
 {
-  std::cout << "[ "; 
+  std::cout << name << ": [ ";
   for( uint i=0; i<(len-1); i++ )
   { std::cout << arr[i] << " , "; }
   std::cout << arr[len-1] << " ]" << std::endl;
