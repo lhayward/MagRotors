@@ -29,9 +29,15 @@ typedef unsigned int  uint;
 double      getEnergy();
 std::string getFileSuffix(int argc, char** argv);
 void        localUpdate(MTRand &randomGen);
+void        localUpdate_A(MTRand &randomGen);
+void        localUpdate_B(MTRand &randomGen);
 void        printDoubleArray( double* arr, std::string name, uint len );
 void        print2DDoubleArray( double** arr, uint L1, uint L2 );
 void        sweep(MTRand &randomGen, uint N);
+
+//Global constants:
+const double PI   = 3.14159265358979323846;
+const double MU_0 = 4*PI*(1e-7);
 
 //Global variables:
 uint         Lx;          //stored in params but let's store again since it's used so often
@@ -54,10 +60,6 @@ std::string  T_str;       //T as a string
 **********************************************************************************************/
 int main(int argc, char** argv) 
 {
-  //Constants:
-  const double PI   = 3.14159265358979323846;
-  const double MU_0 = 4*PI*(1e-7);
-  
   //Parameters needed to run the simulation:
   SimParams*   params;      //store the simulation params read from file in SimParams object
   uint         N_spins;     //total number of spins in both sublattices
@@ -243,6 +245,8 @@ int main(int argc, char** argv)
     { fout_spins.close(); }
   } //temperature loop
   
+  std::cout << D_dip << std::endl;
+  
   sec2 = time(NULL);
   std::cout << "Time: " << (sec2 - sec1) << " seconds" << std::endl;
   std::cout << "\n*** END OF SIMULATION ***\n" << std::endl;
@@ -263,8 +267,6 @@ double getEnergy()
   }
   E_AA *= D_dip/4.0;
   
-  std::cout << E_AA << std::endl;
-  
   return E_AA;
 }
 
@@ -282,7 +284,68 @@ std::string getFileSuffix(int argc, char** argv)
 /**************************************** localUpdate *****************************************/
 void localUpdate(MTRand &randomGen)
 {
-  double r = randomGen.randDblExc();
+  if( randomGen.randInt(1) )
+  { localUpdate_A(randomGen); }
+  else
+  { localUpdate_B(randomGen); }
+}
+  
+/*************************************** localUpdate_A ****************************************/
+void localUpdate_A(MTRand &randomGen)
+{
+  uint         site   = randomGen.randInt(Lx-1); //randomly selected spin location
+  double       alphaFrac = 0.1;                  //fraction of circle on while to consider changes
+  double       dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
+  double       E_i, E_f, dE;      //initial E, final E, and change in E of the local move
+  
+  //Calculate the change in energy:
+  E_i = getEnergy();
+  alpha_A[site] += dAlpha;
+  E_f = getEnergy();
+  alpha_A[site] -= dAlpha;
+  dE = E_f - E_i;
+  
+  //Check if the move is accepted:
+  if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
+  { 
+    alpha_A[site] += dAlpha;
+    
+    //Ensure alpha: is between 0 and 2*PI:
+    while( alpha_A[site] < 0 )
+    { alpha_A[site] += 2*PI; }
+    
+    while( alpha_A[site] > 2*PI )
+    { alpha_A[site] -= 2*PI; }
+  }
+}
+
+/*************************************** localUpdate_B ****************************************/
+void localUpdate_B(MTRand &randomGen)
+{
+  uint         site   = randomGen.randInt(Lx-1); //randomly selected spin location
+  double       alphaFrac = 0.1;                  //fraction of circle on while to consider changes
+  double       dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
+  double       E_i, E_f, dE;      //initial E, final E, and change in E of the local move
+  
+  //Calculate the change in energy:
+  E_i = getEnergy();
+  alpha_B[site] += dAlpha;
+  E_f = getEnergy();
+  alpha_B[site] -= dAlpha;
+  dE = E_f - E_i;
+  
+  //Check if the move is accepted:
+  if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
+  { 
+    alpha_B[site] += dAlpha;
+    
+    //Ensure alpha: is between 0 and 2*PI:
+    while( alpha_B[site] < 0 )
+    { alpha_B[site] += 2*PI; }
+    
+    while( alpha_B[site] > 2*PI )
+    { alpha_B[site] -= 2*PI; }
+  }
 }
 
 /************************************** printDoubleArray **************************************/
