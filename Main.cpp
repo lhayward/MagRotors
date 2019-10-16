@@ -260,17 +260,22 @@ int main(int argc, char** argv)
 double getEnergy()
 {
   double E_AA = 0;
+  double E_BB = 0;
+  double E_AB = 0;
   
+  //Calculate E_AA and E_BB:
   for(uint i=0; i<Lx; i++)
   {
     for(uint j=(i+1); j<Lx; j++)
     {
       E_AA += ( cos(alpha_A[i])*cos(alpha_A[j]) - 2*sin(alpha_A[i])*sin(alpha_A[j]) )/pow(r_AA[i][j],3);
+      E_BB += ( cos(alpha_B[i] - alpha_B[j])  )/pow(r_BB[i][j],3);
     }
   }
   E_AA *= D_dip/4.0;
+  E_BB *= D_dip/4.0;
   
-  return E_AA;
+  return E_AA + E_BB;
 }
 
 /*************************************** getFileSuffix ****************************************/
