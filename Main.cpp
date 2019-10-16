@@ -13,6 +13,7 @@
 //#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 #include <sstream>
 #include <string>
 #include <typeinfo>
@@ -33,20 +34,20 @@ void        print2DDoubleArray( double** arr, uint L1, uint L2 );
 void        sweep(MTRand &randomGen, uint N);
 
 //Global variables:
+uint         Lx;          //stored in params but let's store again since it's used so often
 double       d;           //distance between the centres of magnets
 double       q;           //magnitude of the magnetic charge at the tip of each rod
 double       m;           //magnitude of magnetic moment
 double       D_dip;       //dipolar energy scale
-double**     r_AA;        //distances between pairs magnets (both in A)
-double**     r_BB;        //distances between pairs magnets (both in B)
-double**     r_AB;        //distances between pairs magnets (one in A, one in B)
-double**     r_AB_x;      //x-components of r_AB
-double       r_AB_y;      //y-component of r_AB (same for all pairs)
+double**     r_AA;        //distances between pairs of magnets (both in A) [multiply by d to get m]
+double**     r_BB;        //distances between pairs of magnets (both in B) [multiply by d to get m]
+double**     r_AB;        //distances between pairs of magnets (one in A, one in B) [multiply by d to get m]
+double**     r_AB_x;      //x-components of r_AB [multiply by d to get m]
+double       r_AB_y;      //y-component of r_AB (same for all pairs) [multiply by d to get m]
 double*      alpha_A;     //array of angles corresponding to the magnets in sublattice A
 double*      alpha_B;     //array of angles corresponding to the magnets in sublattice A
 double       T;           //current temperature
 std::string  T_str;       //T as a string
-double dummy;
 
 /**********************************************************************************************
 ******************************************** main *********************************************
@@ -54,12 +55,11 @@ double dummy;
 int main(int argc, char** argv) 
 {
   //Constants:
-  const double MU_0 = 1.0e-7;
   const double PI   = 3.14159265358979323846;
+  const double MU_0 = 4*PI*(1e-7);
   
   //Parameters needed to run the simulation:
   SimParams*   params;      //store the simulation params read from file in SimParams object
-  uint         Lx;          //stored in params but let's store again since it's used so often
   uint         N_spins;     //total number of spins in both sublattices
   uint         numT;        //number of temperatures
   time_t       sec1, sec2;  //for timing
@@ -91,7 +91,9 @@ int main(int argc, char** argv)
   q = PI*pow(params->rodRad_,2)*params->Ms_;
   m = 2*params->a_*q;
   D_dip = MU_0*pow(m,2)/(PI*pow(d,3));
-  r_AB_y = params->h_*d;
+  r_AB_y = params->h_;
+  
+  std::cout << D_dip << std::endl;
   
   //Initialize the 2D distances arrays:
   r_AA   = new double*[Lx];
@@ -115,8 +117,8 @@ int main(int argc, char** argv)
     
     for( uint j=i; j<Lx; j++ )
     {
-      r1 = abs(int(j-i))*d;
-      r2 = Lx*d - r1;
+      r1 = abs(int(j-i));
+      r2 = Lx - r1;
       
       r_AA[i][j] = std::min(r1,r2);
       r_AA[j][i] = r_AA[i][j];
@@ -131,13 +133,18 @@ int main(int argc, char** argv)
   {
     for( uint j=0; j<Lx; j++ )
     {
-      rx1 = ( abs(int(j-i)) + 0.5 )*d;
-      rx2 = Lx*d - rx1;
+      rx1 = ( abs(int(j-i)) + 0.5 );
+      rx2 = Lx - rx1;
       
       r_AB_x[i][j] = std::min(rx1,rx2);
       r_AB[i][j]   = pow( pow(r_AB_x[i][j],2) + pow(r_AB_y,2) , 0.5);
     } //j
   } //i
+  
+  //print2DDoubleArray( r_AA, Lx, Lx );
+  //print2DDoubleArray( r_BB, Lx, Lx );
+  //print2DDoubleArray( r_AB, Lx, Lx );
+  
   
   //Initialize the angles in sublattice A to be random:
   alpha_A = new double[Lx];
@@ -145,6 +152,7 @@ int main(int argc, char** argv)
   for( uint i=0; i<Lx; i++ )
   {
     alpha_A[i] = params->randomGen_.randDblExc( 2*PI );
+    //alpha_A[i] = 0;
     alpha_B[i] = params->randomGen_.randDblExc( 2*PI );
   }
   
@@ -202,10 +210,12 @@ int main(int argc, char** argv)
       fout_bins << (i+1)                << '\t'
                 << sum_e/(1.0*N_meas)   << '\t'
                 << sum_eSq/(1.0*N_meas) << std::endl;
-      std::cout << "sum_e = "   << sum_e   << std::endl;
-      std::cout << "sum_eSq = " << sum_eSq << std::endl << std::endl;
+      
+      //std::cout << "sum_e = "   << sum_e   << std::endl;
+      //std::cout << "sum_eSq = " << sum_eSq << std::endl << std::endl;
       
       printDoubleArray( alpha_A, "alpha_A", Lx);
+      printDoubleArray( alpha_B, "alpha_B", Lx);
       std::cout << std::endl;
       //Write current spin configuration to file:
       if( params->printSpins_ )
@@ -242,8 +252,20 @@ int main(int argc, char** argv)
 /*************************************** getEnergy ****************************************/
 double getEnergy()
 {
-  dummy++;
-  return dummy;
+  double E_AA = 0;
+  
+  for(uint i=0; i<Lx; i++)
+  {
+    for(uint j=(i+1); j<Lx; j++)
+    {
+      E_AA += ( cos(alpha_A[i])*cos(alpha_A[j]) - 2*sin(alpha_A[i])*sin(alpha_A[j]) )/pow(r_AA[i][j],3);
+    }
+  }
+  E_AA *= D_dip/4.0;
+  
+  std::cout << E_AA << std::endl;
+  
+  return E_AA;
 }
 
 /*************************************** getFileSuffix ****************************************/
