@@ -67,13 +67,14 @@ int main(int argc, char** argv)
   time_t       sec1, sec2;  //for timing
   
   //Variables related to input/output data from/to files:
-  std::string   fileSuffix       = getFileSuffix( argc, argv );
-  std::string   paramFileName    = "params" + fileSuffix + ".txt";
-  std::string   simParamStr      = "SIMULATION PARAMETERS";
-  std::string   binsFileName;
-  std::string   spinsFileName;
-  std::ofstream fout_bins;
-  std::ofstream fout_spins;
+  std::string        fileSuffix    = getFileSuffix( argc, argv );
+  std::string        paramFileName = "params" + fileSuffix + ".txt";
+  std::string        simParamStr   = "SIMULATION PARAMETERS";
+  std::string        binsFileName;
+  std::string        spinsFileName;
+  std::ofstream      fout_bins;
+  std::ofstream      fout_spins;
+  std::ostringstream ss;
   
   //Read in parameters from file:
   std::cout.precision(8);
@@ -169,7 +170,9 @@ int main(int argc, char** argv)
     std::cout << "******** T = " << T << " (Temperature #" << (TIndex+1) << ") ********"
               << std::endl;
     
-    T_str = std::to_string(T);
+    ss.str("");
+    ss << T;
+    T_str = ss.str();
     
     //Open file to write bins:
     binsFileName = "bins" + fileSuffix + "_T" + T_str + ".txt";
