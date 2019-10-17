@@ -47,7 +47,7 @@ double       m;           //magnitude of magnetic moment
 double       D_dip;       //dipolar energy scale
 double**     r_AA;        //distances between pairs of magnets (both in A) [multiply by d to get m]
 double**     r_BB;        //distances between pairs of magnets (both in B) [multiply by d to get m]
-double**     r_AB;        //distances between pairs of magnets (one in A, one in B) [multiply by d to get m]
+double**     r_AB;        //distances between pairs of magnets (first one in A, second one in B) [multiply by d to get m]
 double**     r_AB_x;      //x-components of r_AB [multiply by d to get m]
 double       r_AB_y;      //y-component of r_AB (same for all pairs) [multiply by d to get m]
 double*      alpha_A;     //array of angles corresponding to the magnets in sublattice A
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     r_AA[i][i] = 0;
     r_BB[i][i] = 0;
     
-    for( uint j=i; j<Lx; j++ )
+    for( uint j=(i+1); j<Lx; j++ )
     {
       r1 = abs(int(j-i));
       r2 = Lx - r1;
@@ -129,18 +129,33 @@ int main(int argc, char** argv)
       r_BB[j][i] = r_BB[i][j];
     } //j
   } //i
+
+//  //Calculate the distances r_AA and r_BB assuming OBC:
+//  for( uint i=0; i<Lx; i++ )
+//  {
+//    r_AA[i][i] = 0;
+//    r_BB[i][i] = 0;
+//    
+//    for( uint j=(i+1); j<Lx; j++ )
+//    {
+//      r_AA[i][j] = j-i;
+//      r_AA[j][i] = r_AA[i][j];
+//      r_BB[i][j] = r_AA[i][j];
+//      r_BB[j][i] = r_BB[i][j];
+//    } //j
+//  } //i
   
   //Calculate the distances r_AB and r_AB_x assuming PBC:
   double rx1, rx2; //x distance along the two lattice directions (because of PBC)
-  for( uint i=0; i<Lx; i++ )
+  for( uint iA=0; iA<Lx; iA++ )
   {
-    for( uint j=0; j<Lx; j++ )
+    for( uint jB=0; jB<Lx; jB++ )
     {
-      rx1 = ( abs(int(j-i)) + 0.5 );
+      rx1 = ( abs(jB+0.5-iA) );
       rx2 = Lx - rx1;
       
-      r_AB_x[i][j] = std::min(rx1,rx2);
-      r_AB[i][j]   = pow( pow(r_AB_x[i][j],2) + pow(r_AB_y,2) , 0.5);
+      r_AB_x[iA][jB] = std::min(rx1,rx2);
+      r_AB[iA][jB]   = pow( pow(r_AB_x[iA][jB],2) + pow(r_AB_y,2) , 0.5);
     } //j
   } //i
   
@@ -250,8 +265,6 @@ int main(int argc, char** argv)
     { fout_spins.close(); }
   } //temperature loop
   
-  std::cout << D_dip << std::endl;
-  
   sec2 = time(NULL);
   std::cout << "Time: " << (sec2 - sec1) << " seconds" << std::endl;
   std::cout << "\n*** END OF SIMULATION ***\n" << std::endl;
@@ -261,7 +274,7 @@ int main(int argc, char** argv)
 /*************************************** getEnergy ****************************************/
 double getEnergy()
 {
-  std::cout << "\n*** getEnergy() ***" << std::endl;
+  //std::cout << "\n*** getEnergy() ***" << std::endl;
   
   double E_AA = 0;
   double E_BB = 0;
@@ -287,12 +300,13 @@ double getEnergy()
     }
   }
   
-  std::cout << "  E_AA = " << E_AA << std::endl;
-  std::cout << "  E_BB = " << E_BB << std::endl;
-  std::cout << "  E_AB = " << E_AB << std::endl;
-  std::cout << "******************** \n" << std::endl;
+//  std::cout << "  E_AA = " << E_AA << std::endl;
+//  std::cout << "  E_BB = " << E_BB << std::endl;
+//  std::cout << "  E_AB = " << E_AB << std::endl;
+//  std::cout << "******************** \n" << std::endl;
   
   return D_dip/4.0*(E_AA + E_BB + E_AB);
+  //return D_dip/4.0*(E_AB);
 }
 
 /*************************************** getFileSuffix ****************************************/
