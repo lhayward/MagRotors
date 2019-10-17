@@ -97,8 +97,6 @@ int main(int argc, char** argv)
   D_dip = MU_0*pow(m,2)/(PI*pow(d,3));
   r_AB_y = params->h_;
   
-  std::cout << D_dip << std::endl;
-  
   //Initialize the 2D distances arrays:
   r_AA   = new double*[Lx];
   r_BB   = new double*[Lx];
@@ -114,10 +112,9 @@ int main(int argc, char** argv)
   
   initializeDistances();
   
-  print2DDoubleArray( r_AA, Lx, Lx );
-  print2DDoubleArray( r_BB, Lx, Lx );
-  print2DDoubleArray( r_AB, Lx, Lx );
-  
+  //print2DDoubleArray( r_AA, Lx, Lx );
+  //print2DDoubleArray( r_BB, Lx, Lx );
+  //print2DDoubleArray( r_AB, Lx, Lx );
   
   //Initialize the angles in sublattice A to be random:
   alpha_A = new double[Lx];
@@ -125,9 +122,7 @@ int main(int argc, char** argv)
   for( uint i=0; i<Lx; i++ )
   {
     alpha_A[i] = params->randomGen_.randDblExc( 2*PI );
-    //alpha_A[i] = 0;
     alpha_B[i] = params->randomGen_.randDblExc( 2*PI );
-    //alpha_B[i] = PI;
   }
   
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
@@ -190,10 +185,9 @@ int main(int argc, char** argv)
       //std::cout << "sum_e = "   << sum_e   << std::endl;
       //std::cout << "sum_eSq = " << sum_eSq << std::endl << std::endl;
       
-      printDoubleArray( alpha_A, "alpha_A", Lx);
-      printDoubleArray( alpha_B, "alpha_B", Lx);
-      std::cout << "energy = " << getEnergy()/(1.0*N_spins) << std::endl;
-      std::cout << std::endl;
+      //printDoubleArray( alpha_A, "alpha_A", Lx);
+      //printDoubleArray( alpha_B, "alpha_B", Lx);
+      //std::cout << "energy = " << getEnergy()/(1.0*N_spins) << std::endl << std::endl;
       //Write current spin configuration to file:
       if( params->printSpins_ )
       {
@@ -254,6 +248,7 @@ double getEnergy()
   }
   
   return D_dip/4.0*(E_AA + E_BB + E_AB);
+  //return D_dip/4.0*(E_AB + E_BB);
 }
 
 /*************************************** getFileSuffix ****************************************/
@@ -288,21 +283,6 @@ void initializeDistances()
       r_BB[j][i] = r_BB[i][j];
     } //j
   } //i
-
-//  //Calculate the distances r_AA and r_BB assuming OBC:
-//  for( uint i=0; i<Lx; i++ )
-//  {
-//    r_AA[i][i] = 0;
-//    r_BB[i][i] = 0;
-//    
-//    for( uint j=(i+1); j<Lx; j++ )
-//    {
-//      r_AA[i][j] = j-i;
-//      r_AA[j][i] = r_AA[i][j];
-//      r_BB[i][j] = r_AA[i][j];
-//      r_BB[j][i] = r_BB[i][j];
-//    } //j
-//  } //i
   
   //Calculate the distances r_AB and r_AB_x assuming PBC:
   double rx1, rx2; //x distance along the two lattice directions (because of PBC)
@@ -337,11 +317,29 @@ void localUpdate_A(MTRand &randomGen)
   double       E_i, E_f, dE;      //initial E, final E, and change in E of the local move
   
   //Calculate the change in energy:
-  E_i = getEnergy();
-  alpha_A[site] += dAlpha;
-  E_f = getEnergy();
-  alpha_A[site] -= dAlpha;
-  dE = E_f - E_i;
+//  E_i = getEnergy();
+//  alpha_A[site] += dAlpha;
+//  E_f = getEnergy();
+//  alpha_A[site] -= dAlpha;
+//  dE = E_f - E_i;
+  
+  double alpha_i = alpha_A[site]; //initial orientation of selected spin
+  double alpha_f = alpha_A[site] + dAlpha; //proposed new orientation
+  double dE_AA = 0; //change in E_AA for the local move
+  double dE_AB = 0; //change in E_AB for the local move
+  for(uint i=0; i<Lx; i++)
+  {
+    if( i != site )
+    {
+      dE_AA += ( ( cos(alpha_f) - cos(alpha_i) )*cos(alpha_A[i])
+                 - 2*( sin(alpha_f) - sin(alpha_i) )*sin(alpha_A[i]) )/pow(r_AA[site][i],3);
+    }
+    dE_AB += ( ( cos(alpha_f) - cos(alpha_i) )*cos(alpha_B[i])/pow(r_AB[site][i],3) )
+              - ( 3.0*r_AB_x[site][i]*r_AB_y*( sin(alpha_f) - sin(alpha_i) )*sin(alpha_B[i])/pow(r_AB[site][i],5) );
+  }
+  
+  dE = (D_dip/4.0*(dE_AA + dE_AB));
+  //std::cout << "dE: " << dE << "\n    " << (D_dip/4.0*(dE_AA + dE_AB)) << std::endl << std::endl;
   
   //Check if the move is accepted:
   if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
@@ -366,11 +364,28 @@ void localUpdate_B(MTRand &randomGen)
   double       E_i, E_f, dE;      //initial E, final E, and change in E of the local move
   
   //Calculate the change in energy:
-  E_i = getEnergy();
-  alpha_B[site] += dAlpha;
-  E_f = getEnergy();
-  alpha_B[site] -= dAlpha;
-  dE = E_f - E_i;
+//  E_i = getEnergy();
+//  alpha_B[site] += dAlpha;
+//  E_f = getEnergy();
+//  alpha_B[site] -= dAlpha;
+//  dE = E_f - E_i;
+  
+  double alpha_i = alpha_B[site]; //initial orientation of selected spin
+  double alpha_f = alpha_B[site] + dAlpha; //proposed new orientation
+  double dE_BB = 0; //change in E_BB for the local move
+  double dE_AB = 0; //change in E_AB for the local move
+  for(uint i=0; i<Lx; i++)
+  {
+    if( i != site )
+    {
+      dE_BB += ( cos(alpha_f - alpha_B[i]) - cos(alpha_i - alpha_B[i]) )/pow(r_BB[site][i],3);
+    }
+    dE_AB += ( cos(alpha_A[i])*( cos(alpha_f) - cos(alpha_i) )/pow(r_AB[i][site],3) )
+              - ( 3.0*r_AB_x[i][site]*r_AB_y*sin(alpha_A[i])*( sin(alpha_f) - sin(alpha_i) )/pow(r_AB[i][site],5) );
+  }
+  
+  dE = (D_dip/4.0*(dE_BB + dE_AB));
+  //std::cout << "dE: " << dE << "\n    " << (D_dip/4.0*(dE_BB + dE_AB)) << std::endl << std::endl;
   
   //Check if the move is accepted:
   if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
