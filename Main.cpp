@@ -28,6 +28,7 @@ typedef unsigned int  uint;
 //Function definitions:
 double      getEnergy();
 std::string getFileSuffix(int argc, char** argv);
+void        initializeDistances();
 void        localUpdate(MTRand &randomGen);
 void        localUpdate_A(MTRand &randomGen);
 void        localUpdate_B(MTRand &randomGen);
@@ -111,53 +112,7 @@ int main(int argc, char** argv)
     r_AB_x[i] = new double[Lx];
   }
   
-  //Calculate the distances r_AA and r_BB assuming PBC:
-  double r1, r2;  //distance along the two lattice directions (because of PBC)
-  for( uint i=0; i<Lx; i++ )
-  {
-    r_AA[i][i] = 0;
-    r_BB[i][i] = 0;
-    
-    for( uint j=(i+1); j<Lx; j++ )
-    {
-      r1 = abs(int(j-i));
-      r2 = Lx - r1;
-      
-      r_AA[i][j] = std::min(r1,r2);
-      r_AA[j][i] = r_AA[i][j];
-      r_BB[i][j] = r_AA[i][j];
-      r_BB[j][i] = r_BB[i][j];
-    } //j
-  } //i
-
-//  //Calculate the distances r_AA and r_BB assuming OBC:
-//  for( uint i=0; i<Lx; i++ )
-//  {
-//    r_AA[i][i] = 0;
-//    r_BB[i][i] = 0;
-//    
-//    for( uint j=(i+1); j<Lx; j++ )
-//    {
-//      r_AA[i][j] = j-i;
-//      r_AA[j][i] = r_AA[i][j];
-//      r_BB[i][j] = r_AA[i][j];
-//      r_BB[j][i] = r_BB[i][j];
-//    } //j
-//  } //i
-  
-  //Calculate the distances r_AB and r_AB_x assuming PBC:
-  double rx1, rx2; //x distance along the two lattice directions (because of PBC)
-  for( uint iA=0; iA<Lx; iA++ )
-  {
-    for( uint jB=0; jB<Lx; jB++ )
-    {
-      rx1 = ( abs(jB+0.5-iA) );
-      rx2 = Lx - rx1;
-      
-      r_AB_x[iA][jB] = std::min(rx1,rx2);
-      r_AB[iA][jB]   = pow( pow(r_AB_x[iA][jB],2) + pow(r_AB_y,2) , 0.5);
-    } //j
-  } //i
+  initializeDistances();
   
   print2DDoubleArray( r_AA, Lx, Lx );
   print2DDoubleArray( r_BB, Lx, Lx );
@@ -274,8 +229,6 @@ int main(int argc, char** argv)
 /*************************************** getEnergy ****************************************/
 double getEnergy()
 {
-  //std::cout << "\n*** getEnergy() ***" << std::endl;
-  
   double E_AA = 0;
   double E_BB = 0;
   double E_AB = 0;
@@ -300,13 +253,7 @@ double getEnergy()
     }
   }
   
-//  std::cout << "  E_AA = " << E_AA << std::endl;
-//  std::cout << "  E_BB = " << E_BB << std::endl;
-//  std::cout << "  E_AB = " << E_AB << std::endl;
-//  std::cout << "******************** \n" << std::endl;
-  
   return D_dip/4.0*(E_AA + E_BB + E_AB);
-  //return D_dip/4.0*(E_AB);
 }
 
 /*************************************** getFileSuffix ****************************************/
@@ -318,6 +265,58 @@ std::string getFileSuffix(int argc, char** argv)
   { result = "_" + std::string(argv[1]); }
   
   return result;
+}
+
+/************************************ initializeDistances *************************************/
+void initializeDistances()
+{
+  //Calculate the distances r_AA and r_BB assuming PBC:
+  double r1, r2;  //distance along the two lattice directions (because of PBC)
+  for( uint i=0; i<Lx; i++ )
+  {
+    r_AA[i][i] = 0;
+    r_BB[i][i] = 0;
+    
+    for( uint j=(i+1); j<Lx; j++ )
+    {
+      r1 = abs(int(j-i));
+      r2 = Lx - r1;
+      
+      r_AA[i][j] = std::min(r1,r2);
+      r_AA[j][i] = r_AA[i][j];
+      r_BB[i][j] = r_AA[i][j];
+      r_BB[j][i] = r_BB[i][j];
+    } //j
+  } //i
+
+//  //Calculate the distances r_AA and r_BB assuming OBC:
+//  for( uint i=0; i<Lx; i++ )
+//  {
+//    r_AA[i][i] = 0;
+//    r_BB[i][i] = 0;
+//    
+//    for( uint j=(i+1); j<Lx; j++ )
+//    {
+//      r_AA[i][j] = j-i;
+//      r_AA[j][i] = r_AA[i][j];
+//      r_BB[i][j] = r_AA[i][j];
+//      r_BB[j][i] = r_BB[i][j];
+//    } //j
+//  } //i
+  
+  //Calculate the distances r_AB and r_AB_x assuming PBC:
+  double rx1, rx2; //x distance along the two lattice directions (because of PBC)
+  for( uint iA=0; iA<Lx; iA++ )
+  {
+    for( uint jB=0; jB<Lx; jB++ )
+    {
+      rx1 = ( abs(jB+0.5-iA) );
+      rx2 = Lx - rx1;
+      
+      r_AB_x[iA][jB] = std::min(rx1,rx2);
+      r_AB[iA][jB]   = pow( pow(r_AB_x[iA][jB],2) + pow(r_AB_y,2) , 0.5);
+    } //j
+  } //i
 }
 
 /**************************************** localUpdate *****************************************/
