@@ -144,9 +144,9 @@ int main(int argc, char** argv)
     } //j
   } //i
   
-  //print2DDoubleArray( r_AA, Lx, Lx );
-  //print2DDoubleArray( r_BB, Lx, Lx );
-  //print2DDoubleArray( r_AB, Lx, Lx );
+  print2DDoubleArray( r_AA, Lx, Lx );
+  print2DDoubleArray( r_BB, Lx, Lx );
+  print2DDoubleArray( r_AB, Lx, Lx );
   
   
   //Initialize the angles in sublattice A to be random:
@@ -157,6 +157,7 @@ int main(int argc, char** argv)
     alpha_A[i] = params->randomGen_.randDblExc( 2*PI );
     //alpha_A[i] = 0;
     alpha_B[i] = params->randomGen_.randDblExc( 2*PI );
+    //alpha_B[i] = PI;
   }
   
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
@@ -221,6 +222,7 @@ int main(int argc, char** argv)
       
       printDoubleArray( alpha_A, "alpha_A", Lx);
       printDoubleArray( alpha_B, "alpha_B", Lx);
+      std::cout << "energy = " << getEnergy()/(1.0*N_spins) << std::endl;
       std::cout << std::endl;
       //Write current spin configuration to file:
       if( params->printSpins_ )
@@ -259,6 +261,8 @@ int main(int argc, char** argv)
 /*************************************** getEnergy ****************************************/
 double getEnergy()
 {
+  std::cout << "\n*** getEnergy() ***" << std::endl;
+  
   double E_AA = 0;
   double E_BB = 0;
   double E_AB = 0;
@@ -272,10 +276,23 @@ double getEnergy()
       E_BB += ( cos(alpha_B[i] - alpha_B[j])  )/pow(r_BB[i][j],3);
     }
   }
-  E_AA *= D_dip/4.0;
-  E_BB *= D_dip/4.0;
   
-  return E_AA + E_BB;
+  //Calculate E_AB:
+  for(uint iA=0; iA<Lx; iA++)
+  {
+    for(uint jB=0; jB<Lx; jB++)
+    {
+      E_AB += ( cos(alpha_A[iA])*cos(alpha_B[jB])/pow(r_AB[iA][jB],3) )
+              - ( 3.0*r_AB_x[iA][jB]*r_AB_y*sin(alpha_A[iA])*sin(alpha_B[jB])/pow(r_AB[iA][jB],5) );
+    }
+  }
+  
+  std::cout << "  E_AA = " << E_AA << std::endl;
+  std::cout << "  E_BB = " << E_BB << std::endl;
+  std::cout << "  E_AB = " << E_AB << std::endl;
+  std::cout << "******************** \n" << std::endl;
+  
+  return D_dip/4.0*(E_AA + E_BB + E_AB);
 }
 
 /*************************************** getFileSuffix ****************************************/
