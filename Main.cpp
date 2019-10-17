@@ -185,9 +185,6 @@ int main(int argc, char** argv)
       //std::cout << "sum_e = "   << sum_e   << std::endl;
       //std::cout << "sum_eSq = " << sum_eSq << std::endl << std::endl;
       
-      //printDoubleArray( alpha_A, "alpha_A", Lx);
-      //printDoubleArray( alpha_B, "alpha_B", Lx);
-      //std::cout << "energy = " << getEnergy()/(1.0*N_spins) << std::endl << std::endl;
       //Write current spin configuration to file:
       if( params->printSpins_ )
       {
@@ -203,7 +200,13 @@ int main(int argc, char** argv)
       
       
       if( (i+1)%100==0 )
-      { std::cout << (i+1) << " Bins Complete" << std::endl; }
+      {
+        std::cout << (i+1) << " Bins Complete" << std::endl;
+        
+        printDoubleArray( alpha_A, "  alpha_A", Lx);
+        printDoubleArray( alpha_B, "  alpha_B", Lx);
+        std::cout << "  energy = " << getEnergy()/(1.0*N_spins) << std::endl << std::endl;
+      }
       
     } //loop over bins
     
@@ -311,22 +314,16 @@ void localUpdate(MTRand &randomGen)
 /*************************************** localUpdate_A ****************************************/
 void localUpdate_A(MTRand &randomGen)
 {
-  uint         site   = randomGen.randInt(Lx-1); //randomly selected spin location
-  double       alphaFrac = 0.1;                  //fraction of circle on while to consider changes
-  double       dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
-  double       E_i, E_f, dE;      //initial E, final E, and change in E of the local move
-  
-  //Calculate the change in energy:
-//  E_i = getEnergy();
-//  alpha_A[site] += dAlpha;
-//  E_f = getEnergy();
-//  alpha_A[site] -= dAlpha;
-//  dE = E_f - E_i;
-  
-  double alpha_i = alpha_A[site]; //initial orientation of selected spin
+  uint   site   = randomGen.randInt(Lx-1); //randomly selected spin location
+  double alphaFrac = 0.1;                  //fraction of circle on while to consider changes
+  double dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
+  double alpha_i = alpha_A[site];          //initial orientation of selected spin
   double alpha_f = alpha_A[site] + dAlpha; //proposed new orientation
   double dE_AA = 0; //change in E_AA for the local move
   double dE_AB = 0; //change in E_AB for the local move
+  double dE;        //change in E of the local move
+  
+  //Calculate the change in energy by considering all bonds affected by the proposed change:
   for(uint i=0; i<Lx; i++)
   {
     if( i != site )
@@ -358,22 +355,16 @@ void localUpdate_A(MTRand &randomGen)
 /*************************************** localUpdate_B ****************************************/
 void localUpdate_B(MTRand &randomGen)
 {
-  uint         site   = randomGen.randInt(Lx-1); //randomly selected spin location
-  double       alphaFrac = 0.1;                  //fraction of circle on while to consider changes
-  double       dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
-  double       E_i, E_f, dE;      //initial E, final E, and change in E of the local move
-  
-  //Calculate the change in energy:
-//  E_i = getEnergy();
-//  alpha_B[site] += dAlpha;
-//  E_f = getEnergy();
-//  alpha_B[site] -= dAlpha;
-//  dE = E_f - E_i;
-  
-  double alpha_i = alpha_B[site]; //initial orientation of selected spin
+  uint   site   = randomGen.randInt(Lx-1); //randomly selected spin location
+  double alphaFrac = 0.1;                  //fraction of circle on while to consider changes
+  double dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
+  double alpha_i = alpha_B[site];          //initial orientation of selected spin
   double alpha_f = alpha_B[site] + dAlpha; //proposed new orientation
   double dE_BB = 0; //change in E_BB for the local move
   double dE_AB = 0; //change in E_AB for the local move
+  double dE;        //change in E of the local move
+  
+  //Calculate the change in energy by considering all bonds affected by the proposed change:
   for(uint i=0; i<Lx; i++)
   {
     if( i != site )
