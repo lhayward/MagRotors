@@ -83,7 +83,6 @@ int main(int argc, char** argv)
   params->print();
   
   //Variables that store observables (note: sums are over measurements):
-  uint   N_meas;        //number of measurements summed over
   double e, sum_e, sum_eSq, sum_e4; //current energy per spin
   double mxA, sum_mxA, sum_mxASq, sum_mxA4; //x-component mzA for sublattice A
   double mysB, sum_mysB, sum_mysBSq, sum_mysB4; //staggered y-component mysB for sublattice B
@@ -174,45 +173,40 @@ int main(int argc, char** argv)
       sum_mzsSq  = 0;
       sum_mzs4   = 0;
 
-      //perform the measurements for one bin:
-      for( uint j=0; j<params->measPerBin_; j++ )
-      {
-        //perform the sweeps for one measurement:
-        for( uint k=0; k<params->sweepsPerMeas_; k++ )
-        { sweep( params->randomGen_, N_spins ); }
+      //perform the sweeps for one bin:
+      for( uint j=0; j<params->sweepsPerBin_; j++ )
+      { sweep( params->randomGen_, N_spins ); }
         
-        //make energy measurements:
-        e = getEnergy()/(1.0*N_spins);
-        sum_e   += e;
-        sum_eSq += pow(e,2.0);
-        sum_e4  += pow(e,4.0);
-        
-        //make mxA measurements:
-        mxA = getMxA()/(N_spins/2.0);
-        sum_mxA   += abs(mxA);
-        sum_mxASq += pow(mxA,2.0);
-        sum_mxA4  += pow(mxA,4.0);
-        
-        //make mysB measurements:
-        mysB = getMysB()/(N_spins/2.0);
-        sum_mysB   += abs(mysB);
-        sum_mysBSq += pow(mysB,2.0);
-        sum_mysB4  += pow(mysB,4.0);
-        
-        //make mzs measurements:
-        mzs = getMzs()/(1.0*N_spins);
-        sum_mzs   += abs(mzs);
-        sum_mzsSq += pow(mzs,2.0);
-        sum_mzs4  += pow(mzs,4.0);
-      } //loop over measurements
+      //make energy measurements:
+      e = getEnergy()/(1.0*N_spins);
+      sum_e   += e;
+      sum_eSq += pow(e,2.0);
+      sum_e4  += pow(e,4.0);
       
-      //Write binned measurements to file:
-      N_meas = params->measPerBin_;
+      //make mxA measurements:
+      mxA = getMxA()/(N_spins/2.0);
+      sum_mxA   += abs(mxA);
+      sum_mxASq += pow(mxA,2.0);
+      sum_mxA4  += pow(mxA,4.0);
+      
+      //make mysB measurements:
+      mysB = getMysB()/(N_spins/2.0);
+      sum_mysB   += abs(mysB);
+      sum_mysBSq += pow(mysB,2.0);
+      sum_mysB4  += pow(mysB,4.0);
+      
+      //make mzs measurements:
+      mzs = getMzs()/(1.0*N_spins);
+      sum_mzs   += abs(mzs);
+      sum_mzsSq += pow(mzs,2.0);
+      sum_mzs4  += pow(mzs,4.0);
+      
+      //Write observables to file:
       fout_bins << (i+1)                 << '\t'
-                << sum_e/(1.0*N_meas)    << '\t' << sum_eSq/(1.0*N_meas)    << '\t' << sum_e4/(1.0*N_meas)    << '\t'
-                << sum_mxA/(1.0*N_meas)  << '\t' << sum_mxASq/(1.0*N_meas)  << '\t' << sum_mxA4/(1.0*N_meas)  << '\t'
-                << sum_mysB/(1.0*N_meas) << '\t' << sum_mysBSq/(1.0*N_meas) << '\t' << sum_mysB4/(1.0*N_meas) << '\t'
-                << sum_mzs/(1.0*N_meas)  << '\t' << sum_mzsSq/(1.0*N_meas)  << '\t' << sum_mzs4/(1.0*N_meas)  << std::endl;
+                << sum_e    << '\t' << sum_eSq    << '\t' << sum_e4    << '\t'
+                << sum_mxA  << '\t' << sum_mxASq  << '\t' << sum_mxA4  << '\t'
+                << sum_mysB << '\t' << sum_mysBSq << '\t' << sum_mysB4 << '\t'
+                << sum_mzs  << '\t' << sum_mzsSq  << '\t' << sum_mzs4  << std::endl;
       
       //Write current spin configuration to file:
       if( params->printSpins_ )

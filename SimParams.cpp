@@ -37,8 +37,7 @@ SimParams::SimParams(std::string fileName, std::string startStr)
     h_               = FileReading::readDouble   (&fin, EQUALS_CHAR);
     seed_            = FileReading::readULong    (&fin, EQUALS_CHAR);
     numWarmUpSweeps_ = FileReading::readUint     (&fin, EQUALS_CHAR);
-    sweepsPerMeas_   = FileReading::readUint     (&fin, EQUALS_CHAR);
-    measPerBin_      = FileReading::readUint     (&fin, EQUALS_CHAR);
+    sweepsPerBin_    = FileReading::readUint     (&fin, EQUALS_CHAR);
     numBins_         = FileReading::readUint     (&fin, EQUALS_CHAR);
     printSpins_      = FileReading::readBool     (&fin, EQUALS_CHAR);
     
@@ -82,8 +81,7 @@ void SimParams::print()
             << "                          h = " << h_ << "\n"
             << "                       Seed = " << seed_ << "\n"
             << "   Number of Warm-up Sweeps = " << numWarmUpSweeps_ << "\n"
-            << "     Sweeps per Measurement = " << sweepsPerMeas_ << "\n"
-            << "       Measurements per Bin = " << measPerBin_ << "\n"
+            << "             Sweeps per Bin = " << sweepsPerBin_ << "\n"
             << "             Number of Bins = " << numBins_ << "\n"
             << "       Print Spins Configs? = " << printSpins_ << "\n"
             << std::endl;   

@@ -24,8 +24,7 @@ class SimParams
     double               h_;      //y-distance between the sublattices [dimensionless]
     ulong                seed_;
     uint                 numWarmUpSweeps_;
-    uint                 sweepsPerMeas_;
-    uint                 measPerBin_;
+    uint                 sweepsPerBin_;
     uint                 numBins_;
     bool                 printSpins_;
   
