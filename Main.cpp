@@ -28,6 +28,7 @@ typedef unsigned int  uint;
 //Function definitions:
 double      getEnergy();
 std::string getFileSuffix(int argc, char** argv);
+double      getMzs();
 void        initializeDistances();
 void        localUpdate(MTRand &randomGen);
 void        localUpdate_A(MTRand &randomGen);
@@ -84,10 +85,10 @@ int main(int argc, char** argv)
   Lx     = params->Lx_;
   params->print();
   
-  //Variables that store observables:
-  uint   N_meas;        //number of measurements averaged over
-  double e;              //current energy per spin
-  double sum_e, sum_eSq; //sums of e and e^2 over measurements
+  //Variables that store observables (note: sums are over measurements):
+  uint   N_meas;        //number of measurements summed over
+  double e, sum_e, sum_eSq, sum_e4; //current energy per spin
+  double mzs, sum_mzs, sum_mzsSq, sum_mzs4; //staggered mzs
   
   //Define other parameters based on the ones read from file:
   N_spins = 2*Lx;
@@ -144,7 +145,9 @@ int main(int argc, char** argv)
     binsFileName = "bins" + fileSuffix + "_T" + T_str + ".txt";
     fout_bins.open(binsFileName);
     fout_bins.precision(15);
-    fout_bins << "# binNum \t E \t ESq" << std::endl;
+    fout_bins << "# binNum \t"
+              << "e   \t eSq   \t e^4 \t"
+              << "mzs \t mzsSq \t mzs^4" << std::endl;
     
     if( params->printSpins_ )
     {
@@ -163,6 +166,10 @@ int main(int argc, char** argv)
     {
       sum_e = 0;
       sum_eSq = 0;
+      sum_e4 = 0;
+      sum_mzs = 0;
+      sum_mzsSq = 0;
+      sum_mzs4  = 0;
       //perform the measurements for one bin:
       for( uint j=0; j<params->measPerBin_; j++ )
       {
@@ -173,17 +180,21 @@ int main(int argc, char** argv)
         //make energy measurements:
         e = getEnergy()/(1.0*N_spins);
         sum_e   += e;
-        sum_eSq += pow(e,2);
+        sum_eSq += pow(e,2.0);
+        sum_e4  += pow(e,4.0);
+        
+        //make mzs measurements:
+        mzs = getMzs()/(1.0*N_spins);
+        sum_mzs   += abs(mzs);
+        sum_mzsSq += pow(mzs,2.0);
+        sum_mzs4  += pow(mzs,4.0);
       } //loop over measurements
       
       //Write binned measurements to file:
       N_meas = params->measPerBin_;
       fout_bins << (i+1)                << '\t'
-                << sum_e/(1.0*N_meas)   << '\t'
-                << sum_eSq/(1.0*N_meas) << std::endl;
-      
-      //std::cout << "sum_e = "   << sum_e   << std::endl;
-      //std::cout << "sum_eSq = " << sum_eSq << std::endl << std::endl;
+                << sum_e/(1.0*N_meas)   << '\t' << sum_eSq/(1.0*N_meas)   << '\t' << sum_e4/(1.0*N_meas)   << '\t'
+                << sum_mzs/(1.0*N_meas) << '\t' << sum_mzsSq/(1.0*N_meas) << '\t' << sum_mzs4/(1.0*N_meas) << std::endl;
       
       //Write current spin configuration to file:
       if( params->printSpins_ )
@@ -203,9 +214,10 @@ int main(int argc, char** argv)
       {
         std::cout << (i+1) << " Bins Complete" << std::endl;
         
-        printDoubleArray( alpha_A, "  alpha_A", Lx);
         printDoubleArray( alpha_B, "  alpha_B", Lx);
-        std::cout << "  energy = " << getEnergy()/(1.0*N_spins) << std::endl << std::endl;
+        printDoubleArray( alpha_A, "  alpha_A", Lx);
+        std::cout << "  energy = " << getEnergy()/(1.0*N_spins) << std::endl;
+        std::cout << "     mzs = " << getMzs()/(1.0*N_spins) << std::endl << std::endl;
       }
       
     } //loop over bins
@@ -263,6 +275,19 @@ std::string getFileSuffix(int argc, char** argv)
   { result = "_" + std::string(argv[1]); }
   
   return result;
+}
+
+/******************************************* getMzs *******************************************/
+double getMzs()
+{
+  double Mzs = 0;
+  for( uint i=0; i<Lx; i++ )
+  {
+    Mzs += ( cos(alpha_A[i]) - cos(alpha_B[i]) );
+  }
+  
+  //return m*Mzs;
+  return Mzs;
 }
 
 /************************************ initializeDistances *************************************/
