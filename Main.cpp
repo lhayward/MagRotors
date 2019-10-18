@@ -28,7 +28,10 @@ typedef unsigned int  uint;
 //Function definitions:
 double      getEnergy();
 std::string getFileSuffix(int argc, char** argv);
-double      getMxA();
+double      getMAx();
+double      getMAz();
+double      getMBy();
+double      getMBz();
 double      getMysB();
 double      getMzs();
 void        initializeDistances();
@@ -83,10 +86,9 @@ int main(int argc, char** argv)
   params->print();
   
   //Variables that store observables (note: sums are over measurements):
-  double e, sum_e, sum_eSq, sum_e4; //current energy per spin
-  double mxA, sum_mxA, sum_mxASq, sum_mxA4; //x-component mzA for sublattice A
-  double mysB, sum_mysB, sum_mysBSq, sum_mysB4; //staggered y-component mysB for sublattice B
-  double mzs, sum_mzs, sum_mzsSq, sum_mzs4; //staggered z-component mzs
+  double e;    //current energy per spin
+  double mAx, mAz;  //x and z components of mag. for A
+  double mBy, mBz;  //y and z components of mag. for B
   
   //Define other parameters based on the ones read from file:
   N_spins = 2*Lx;
@@ -139,11 +141,8 @@ int main(int argc, char** argv)
     binsFileName = "bins" + fileSuffix + "_T" + T_str + ".txt";
     fout_bins.open(binsFileName);
     fout_bins.precision(15);
-    fout_bins << "# binNum \t"
-              << "e    \t eSq    \t e^4    \t"
-              << "mxA  \t mxASq  \t mxA^4  \t"
-              << "mysB \t mysBSq \t mysB^4 \t"
-              << "mzs  \t mzsSq  \t mzs^4 " << std::endl;
+    fout_bins << "# binNum \t e \t\t\t"
+              << "mAx \t\t\t mAz \t\t\t mBy \t\t\t mBz " << std::endl;
     
     if( params->printSpins_ )
     {
@@ -160,53 +159,21 @@ int main(int argc, char** argv)
     //loop over Monte Carlo bins:
     for( uint i=0; i<params->numBins_; i++ )
     {
-      sum_e      = 0;
-      sum_eSq    = 0;
-      sum_e4     = 0;
-      sum_mxA    = 0;
-      sum_mxASq  = 0;
-      sum_mxA4   = 0;
-      sum_mysB   = 0;
-      sum_mysBSq = 0;
-      sum_mysB4  = 0;
-      sum_mzs    = 0;
-      sum_mzsSq  = 0;
-      sum_mzs4   = 0;
-
       //perform the sweeps for one bin:
       for( uint j=0; j<params->sweepsPerBin_; j++ )
       { sweep( params->randomGen_, N_spins ); }
         
-      //make energy measurements:
+      //calculate observables:
       e = getEnergy()/(1.0*N_spins);
-      sum_e   += e;
-      sum_eSq += pow(e,2.0);
-      sum_e4  += pow(e,4.0);
-      
-      //make mxA measurements:
-      mxA = getMxA()/(N_spins/2.0);
-      sum_mxA   += abs(mxA);
-      sum_mxASq += pow(mxA,2.0);
-      sum_mxA4  += pow(mxA,4.0);
-      
-      //make mysB measurements:
-      mysB = getMysB()/(N_spins/2.0);
-      sum_mysB   += abs(mysB);
-      sum_mysBSq += pow(mysB,2.0);
-      sum_mysB4  += pow(mysB,4.0);
-      
-      //make mzs measurements:
-      mzs = getMzs()/(1.0*N_spins);
-      sum_mzs   += abs(mzs);
-      sum_mzsSq += pow(mzs,2.0);
-      sum_mzs4  += pow(mzs,4.0);
+      mAx = getMAx()/(N_spins/2.0);
+      mAz = getMAz()/(N_spins/2.0);
+      mBy = getMBy()/(N_spins/2.0);
+      mBz = getMBz()/(N_spins/2.0);
       
       //Write observables to file:
-      fout_bins << (i+1)                 << '\t'
-                << sum_e    << '\t' << sum_eSq    << '\t' << sum_e4    << '\t'
-                << sum_mxA  << '\t' << sum_mxASq  << '\t' << sum_mxA4  << '\t'
-                << sum_mysB << '\t' << sum_mysBSq << '\t' << sum_mysB4 << '\t'
-                << sum_mzs  << '\t' << sum_mzsSq  << '\t' << sum_mzs4  << std::endl;
+      fout_bins << (i+1)  << '\t' << e << '\t'
+                << mAx  << '\t' << mAz  << '\t' << mBy  << '\t' << mBz  << '\t'
+                << std::endl;
       
       //Write current spin configuration to file:
       if( params->printSpins_ )
@@ -228,10 +195,11 @@ int main(int argc, char** argv)
         
         printDoubleArray( alpha_B, "  alpha_B", Lx);
         printDoubleArray( alpha_A, "  alpha_A", Lx);
-        std::cout << "  energy = " << getEnergy()/(1.0*N_spins)  << std::endl;
-        std::cout << "     mxA = " << getMxA()/(N_spins/2.0)     << std::endl;
-        std::cout << "    mysB = " << getMysB()/(N_spins/2.0)    << std::endl;
-        std::cout << "     mzs = " << getMzs()/(1.0*N_spins)     << std::endl << std::endl;
+        std::cout << "  energy = " << e    << std::endl;
+        std::cout << "     mAx = " << mAx  << std::endl;
+        std::cout << "     mAz = " << mAz  << std::endl;
+        std::cout << "     mBy = " << mBy  << std::endl;
+        std::cout << "     mBz = " << mBz  << std::endl;
       }
       
     } //loop over bins
@@ -291,14 +259,44 @@ std::string getFileSuffix(int argc, char** argv)
   return result;
 }
 
-/******************************************* getMxA *******************************************/
-double getMxA()
+/******************************************* getMAx *******************************************/
+double getMAx()
 {
-  double MxA = 0;
+  double MAx = 0;
   for( uint i=0; i<Lx; i++ )
-  {  MxA += sin(alpha_A[i]);  }
+  {  MAx += sin(alpha_A[i]);  }
   
-  return MxA;
+  return MAx;
+}
+
+/******************************************* getMAz *******************************************/
+double getMAz()
+{
+  double MAz = 0;
+  for( uint i=0; i<Lx; i++ )
+  {  MAz += cos(alpha_A[i]);  }
+  
+  return MAz;
+}
+
+/******************************************* getMBy *******************************************/
+double getMBy()
+{
+  double MBy = 0;
+  for( uint i=0; i<Lx; i++ )
+  {  MBy += sin(alpha_B[i]);  }
+  
+  return MBy;
+}
+
+/******************************************* getMBz *******************************************/
+double getMBz()
+{
+  double MBz = 0;
+  for( uint i=0; i<Lx; i++ )
+  {  MBz += cos(alpha_B[i]);  }
+  
+  return MBz;
 }
 
 /****************************************** getMysB *******************************************/
