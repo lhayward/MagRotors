@@ -32,8 +32,10 @@ double      getMAx();
 double      getMAz();
 double      getMBy();
 double      getMBz();
-double      getMysB();
-double      getMzs();
+double      getMsAx();
+double      getMsAz();
+double      getMsBy();
+double      getMsBz();
 void        initializeDistances();
 void        localUpdate(MTRand &randomGen);
 void        localUpdate_A(MTRand &randomGen);
@@ -87,8 +89,10 @@ int main(int argc, char** argv)
   
   //Variables that store observables (note: sums are over measurements):
   double e;    //current energy per spin
-  double mAx, mAz;  //x and z components of mag. for A
-  double mBy, mBz;  //y and z components of mag. for B
+  double mAx, mAz;    //x and z components of mag. for A
+  double mBy, mBz;    //y and z components of mag. for B
+  double msAx, msAz;  //x and z components of staggered mag. for A
+  double msBy, msBz;  //y and z components of staggered mag. for B
   
   //Define other parameters based on the ones read from file:
   N_spins = 2*Lx;
@@ -164,15 +168,20 @@ int main(int argc, char** argv)
       { sweep( params->randomGen_, N_spins ); }
         
       //calculate observables:
-      e = getEnergy()/(1.0*N_spins);
-      mAx = getMAx()/(N_spins/2.0);
-      mAz = getMAz()/(N_spins/2.0);
-      mBy = getMBy()/(N_spins/2.0);
-      mBz = getMBz()/(N_spins/2.0);
+      e    = getEnergy()/(1.0*N_spins);
+      mAx  = getMAx()/(N_spins/2.0);
+      mAz  = getMAz()/(N_spins/2.0);
+      mBy  = getMBy()/(N_spins/2.0);
+      mBz  = getMBz()/(N_spins/2.0);
+      msAx = getMsAx()/(N_spins/2.0);
+      msAz = getMsAz()/(N_spins/2.0);
+      msBy = getMsBy()/(N_spins/2.0);
+      msBz = getMsBz()/(N_spins/2.0);
       
       //Write observables to file:
       fout_bins << (i+1)  << '\t' << e << '\t'
-                << mAx  << '\t' << mAz  << '\t' << mBy  << '\t' << mBz  << '\t'
+                << mAx   << '\t' << mAz   << '\t' << mBy   << '\t' << mBz   << '\t'
+                << msAx  << '\t' << msAz  << '\t' << msBy  << '\t' << msBz  << '\t'
                 << std::endl;
       
       //Write current spin configuration to file:
@@ -199,7 +208,11 @@ int main(int argc, char** argv)
         std::cout << "     mAx = " << mAx  << std::endl;
         std::cout << "     mAz = " << mAz  << std::endl;
         std::cout << "     mBy = " << mBy  << std::endl;
-        std::cout << "     mBz = " << mBz  << std::endl;
+        std::cout << "     mBz = " << mBz  << std::endl;\
+        std::cout << "    msAx = " << msAx << std::endl;
+        std::cout << "    msAz = " << msAz << std::endl;
+        std::cout << "    msBy = " << msBy << std::endl;
+        std::cout << "    msBz = " << msBz << std::endl;
       }
       
     } //loop over bins
@@ -299,24 +312,44 @@ double getMBz()
   return MBz;
 }
 
-/****************************************** getMysB *******************************************/
-double getMysB()
+/****************************************** getMsAx *******************************************/
+double getMsAx()
 {
-  double MysB = 0;
+  double MsAx = 0;
   for( uint i=0; i<Lx; i=i+2 )
-  {  MysB += ( sin(alpha_B[i]) - sin(alpha_B[i+1]) );  }
+  {  MsAx += ( sin(alpha_A[i]) - sin(alpha_A[i+1]) );  }
   
-  return MysB;
+  return MsAx;
 }
 
-/******************************************* getMzs *******************************************/
-double getMzs()
+/****************************************** getMsAz *******************************************/
+double getMsAz()
 {
-  double Mzs = 0;
-  for( uint i=0; i<Lx; i++ )
-  {  Mzs += ( cos(alpha_A[i]) - cos(alpha_B[i]) );  }
+  double MsAz = 0;
+  for( uint i=0; i<Lx; i=i+2 )
+  {  MsAz += ( cos(alpha_A[i]) - cos(alpha_A[i+1]) );  }
   
-  return Mzs;
+  return MsAz;
+}
+
+/****************************************** getMsBy *******************************************/
+double getMsBy()
+{
+  double MsBy = 0;
+  for( uint i=0; i<Lx; i=i+2 )
+  {  MsBy += ( sin(alpha_B[i]) - sin(alpha_B[i+1]) );  }
+  
+  return MsBy;
+}
+
+/****************************************** getMsBz *******************************************/
+double getMsBz()
+{
+  double MsBz = 0;
+  for( uint i=0; i<Lx; i=i+2 )
+  {  MsBz += ( cos(alpha_B[i]) - cos(alpha_B[i+1]) );  }
+  
+  return MsBz;
 }
 
 /************************************ initializeDistances *************************************/
