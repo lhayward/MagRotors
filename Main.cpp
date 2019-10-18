@@ -29,6 +29,7 @@ typedef unsigned int  uint;
 double      getEnergy();
 std::string getFileSuffix(int argc, char** argv);
 double      getMxA();
+double      getMysB();
 double      getMzs();
 void        initializeDistances();
 void        localUpdate(MTRand &randomGen);
@@ -40,14 +41,9 @@ void        sweep(MTRand &randomGen, uint N);
 
 //Global constants:
 const double PI   = 3.14159265358979323846;
-const double MU_0 = 4*PI*(1e-7);
 
 //Global variables:
 uint         Lx;          //stored in params but let's store again since it's used so often
-double       d;           //distance between the centres of magnets
-double       q;           //magnitude of the magnetic charge at the tip of each rod
-double       m;           //magnitude of magnetic moment
-double       D_dip;       //dipolar energy scale
 double**     r_AA;        //distances between pairs of magnets (both in A) [multiply by d to get m]
 double**     r_BB;        //distances between pairs of magnets (both in B) [multiply by d to get m]
 double**     r_AB;        //distances between pairs of magnets (first one in A, second one in B) [multiply by d to get m]
@@ -90,14 +86,11 @@ int main(int argc, char** argv)
   uint   N_meas;        //number of measurements summed over
   double e, sum_e, sum_eSq, sum_e4; //current energy per spin
   double mxA, sum_mxA, sum_mxASq, sum_mxA4; //x-component mzA for sublattice A
+  double mysB, sum_mysB, sum_mysBSq, sum_mysB4; //staggered y-component mysB for sublattice B
   double mzs, sum_mzs, sum_mzsSq, sum_mzs4; //staggered z-component mzs
   
   //Define other parameters based on the ones read from file:
   N_spins = 2*Lx;
-  d = (2*params->a_) + params->Delta_;
-  q = PI*pow(params->rodRad_,2)*params->Ms_;
-  m = 2*params->a_*q;
-  D_dip = MU_0*pow(m,2)/(PI*pow(d,3));
   r_AB_y = params->h_;
   
   //Initialize the 2D distances arrays:
@@ -148,9 +141,10 @@ int main(int argc, char** argv)
     fout_bins.open(binsFileName);
     fout_bins.precision(15);
     fout_bins << "# binNum \t"
-              << "e   \t eSq   \t e^4   \t"
-              << "mxA \t mxASq \t mxA^4 \t"
-              << "mzs \t mzsSq \t mzs^4 " << std::endl;
+              << "e    \t eSq    \t e^4    \t"
+              << "mxA  \t mxASq  \t mxA^4  \t"
+              << "mysB \t mysBSq \t mysB^4 \t"
+              << "mzs  \t mzsSq  \t mzs^4 " << std::endl;
     
     if( params->printSpins_ )
     {
@@ -167,15 +161,18 @@ int main(int argc, char** argv)
     //loop over Monte Carlo bins:
     for( uint i=0; i<params->numBins_; i++ )
     {
-      sum_e     = 0;
-      sum_eSq   = 0;
-      sum_e4    = 0;
-      sum_mxA   = 0;
-      sum_mxASq = 0;
-      sum_mxA4  = 0;
-      sum_mzs   = 0;
-      sum_mzsSq = 0;
-      sum_mzs4  = 0;
+      sum_e      = 0;
+      sum_eSq    = 0;
+      sum_e4     = 0;
+      sum_mxA    = 0;
+      sum_mxASq  = 0;
+      sum_mxA4   = 0;
+      sum_mysB   = 0;
+      sum_mysBSq = 0;
+      sum_mysB4  = 0;
+      sum_mzs    = 0;
+      sum_mzsSq  = 0;
+      sum_mzs4   = 0;
 
       //perform the measurements for one bin:
       for( uint j=0; j<params->measPerBin_; j++ )
@@ -196,6 +193,12 @@ int main(int argc, char** argv)
         sum_mxASq += pow(mxA,2.0);
         sum_mxA4  += pow(mxA,4.0);
         
+        //make mysB measurements:
+        mysB = getMysB()/(N_spins/2.0);
+        sum_mysB   += abs(mysB);
+        sum_mysBSq += pow(mysB,2.0);
+        sum_mysB4  += pow(mysB,4.0);
+        
         //make mzs measurements:
         mzs = getMzs()/(1.0*N_spins);
         sum_mzs   += abs(mzs);
@@ -205,10 +208,11 @@ int main(int argc, char** argv)
       
       //Write binned measurements to file:
       N_meas = params->measPerBin_;
-      fout_bins << (i+1)                << '\t'
-                << sum_e/(1.0*N_meas)   << '\t' << sum_eSq/(1.0*N_meas)   << '\t' << sum_e4/(1.0*N_meas)   << '\t'
-                << sum_mxA/(1.0*N_meas) << '\t' << sum_mxASq/(1.0*N_meas) << '\t' << sum_mxA4/(1.0*N_meas) << '\t'
-                << sum_mzs/(1.0*N_meas) << '\t' << sum_mzsSq/(1.0*N_meas) << '\t' << sum_mzs4/(1.0*N_meas) << std::endl;
+      fout_bins << (i+1)                 << '\t'
+                << sum_e/(1.0*N_meas)    << '\t' << sum_eSq/(1.0*N_meas)    << '\t' << sum_e4/(1.0*N_meas)    << '\t'
+                << sum_mxA/(1.0*N_meas)  << '\t' << sum_mxASq/(1.0*N_meas)  << '\t' << sum_mxA4/(1.0*N_meas)  << '\t'
+                << sum_mysB/(1.0*N_meas) << '\t' << sum_mysBSq/(1.0*N_meas) << '\t' << sum_mysB4/(1.0*N_meas) << '\t'
+                << sum_mzs/(1.0*N_meas)  << '\t' << sum_mzsSq/(1.0*N_meas)  << '\t' << sum_mzs4/(1.0*N_meas)  << std::endl;
       
       //Write current spin configuration to file:
       if( params->printSpins_ )
@@ -230,9 +234,10 @@ int main(int argc, char** argv)
         
         printDoubleArray( alpha_B, "  alpha_B", Lx);
         printDoubleArray( alpha_A, "  alpha_A", Lx);
-        std::cout << "  energy = " << getEnergy()/(1.0*N_spins) << std::endl;
-        std::cout << "     mxA = " << getMxA()/(N_spins/2.0)    << std::endl;
-        std::cout << "     mzs = " << getMzs()/(1.0*N_spins)    << std::endl << std::endl;
+        std::cout << "  energy = " << getEnergy()/(1.0*N_spins)  << std::endl;
+        std::cout << "     mxA = " << getMxA()/(N_spins/2.0)     << std::endl;
+        std::cout << "    mysB = " << getMysB()/(N_spins/2.0)    << std::endl;
+        std::cout << "     mzs = " << getMzs()/(1.0*N_spins)     << std::endl << std::endl;
       }
       
     } //loop over bins
@@ -245,6 +250,7 @@ int main(int argc, char** argv)
   } //temperature loop
   
   sec2 = time(NULL);
+  
   std::cout << "Time: " << (sec2 - sec1) << " seconds" << std::endl;
   std::cout << "\n*** END OF SIMULATION ***\n" << std::endl;
   return 0;
@@ -299,6 +305,16 @@ double getMxA()
   {  MxA += sin(alpha_A[i]);  }
   
   return MxA;
+}
+
+/****************************************** getMysB *******************************************/
+double getMysB()
+{
+  double MysB = 0;
+  for( uint i=0; i<Lx; i=i+2 )
+  {  MysB += ( sin(alpha_B[i]) - sin(alpha_B[i+1]) );  }
+  
+  return MysB;
 }
 
 /******************************************* getMzs *******************************************/

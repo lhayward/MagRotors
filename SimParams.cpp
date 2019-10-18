@@ -35,10 +35,6 @@ SimParams::SimParams(std::string fileName, std::string startStr)
                                                   LIST_END_CHAR);
     Lx_              = FileReading::readUint     (&fin, EQUALS_CHAR);
     h_               = FileReading::readDouble   (&fin, EQUALS_CHAR);
-    a_               = FileReading::readDouble   (&fin, EQUALS_CHAR);
-    Delta_           = FileReading::readDouble   (&fin, EQUALS_CHAR);
-    Ms_              = FileReading::readDouble   (&fin, EQUALS_CHAR);
-    rodRad_          = FileReading::readDouble   (&fin, EQUALS_CHAR);
     seed_            = FileReading::readULong    (&fin, EQUALS_CHAR);
     numWarmUpSweeps_ = FileReading::readUint     (&fin, EQUALS_CHAR);
     sweepsPerMeas_   = FileReading::readUint     (&fin, EQUALS_CHAR);
@@ -84,10 +80,6 @@ void SimParams::print()
   //print the rest of the parameters:
   std::cout << "        Length of 1D chains = " << Lx_ << "\n"
             << "                          h = " << h_ << "\n"
-            << "                          a = " << a_ << "\n"
-            << "                      Delta = " << Delta_ << "\n"
-            << "                         Ms = " << Ms_ << "\n"
-            << "                 Rod radius = " << rodRad_ << "\n"
             << "                       Seed = " << seed_ << "\n"
             << "   Number of Warm-up Sweeps = " << numWarmUpSweeps_ << "\n"
             << "     Sweeps per Measurement = " << sweepsPerMeas_ << "\n"

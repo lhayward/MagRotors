@@ -22,10 +22,6 @@ class SimParams
     std::vector<double>* TList_;  //list of temperatures
     uint                 Lx_;     //length along one chain
     double               h_;      //y-distance between the sublattices [dimensionless]
-    double               a_;      //half of rod length [m]
-    double               Delta_;  //shortest distance between the tips of two nn rods [m]
-    double               Ms_;     //saturation magnetization [A/m]
-    double               rodRad_; //rod radius [m]
     ulong                seed_;
     uint                 numWarmUpSweeps_;
     uint                 sweepsPerMeas_;
