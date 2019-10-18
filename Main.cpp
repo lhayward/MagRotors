@@ -299,8 +299,7 @@ double getMxA()
   for( uint i=0; i<Lx; i++ )
   {  MxA += sin(alpha_A[i]);  }
   
-  return m*MxA;
-  //return MxA;
+  return MxA;
 }
 
 /******************************************* getMzs *******************************************/
@@ -310,8 +309,7 @@ double getMzs()
   for( uint i=0; i<Lx; i++ )
   {  Mzs += ( cos(alpha_A[i]) - cos(alpha_B[i]) );  }
   
-  return m*Mzs;
-  //return Mzs;
+  return Mzs;
 }
 
 /************************************ initializeDistances *************************************/
