@@ -55,7 +55,7 @@ double**     r_AB_x;      //x-components of r_AB [multiply by d to get m]
 double       r_AB_y;      //y-component of r_AB (same for all pairs) [multiply by d to get m]
 double*      alpha_A;     //array of angles corresponding to the magnets in sublattice A
 double*      alpha_B;     //array of angles corresponding to the magnets in sublattice A
-double       T;           //current temperature
+double       T;           //current temperature (it's actually T*4/D_dip)
 std::string  T_str;       //T as a string
 
 /**********************************************************************************************
@@ -277,8 +277,7 @@ double getEnergy()
     }
   }
   
-  return D_dip/4.0*(E_AA + E_BB + E_AB);
-  //return D_dip/4.0*(E_AB + E_BB);
+  return (E_AA + E_BB + E_AB);
 }
 
 /*************************************** getFileSuffix ****************************************/
@@ -382,8 +381,7 @@ void localUpdate_A(MTRand &randomGen)
               - ( 3.0*r_AB_x[site][i]*r_AB_y*( sin(alpha_f) - sin(alpha_i) )*sin(alpha_B[i])/pow(r_AB[site][i],5) );
   }
   
-  dE = (D_dip/4.0*(dE_AA + dE_AB));
-  //std::cout << "dE: " << dE << "\n    " << (D_dip/4.0*(dE_AA + dE_AB)) << std::endl << std::endl;
+  dE = (dE_AA + dE_AB);
   
   //Check if the move is accepted:
   if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
@@ -422,8 +420,7 @@ void localUpdate_B(MTRand &randomGen)
               - ( 3.0*r_AB_x[i][site]*r_AB_y*sin(alpha_A[i])*( sin(alpha_f) - sin(alpha_i) )/pow(r_AB[i][site],5) );
   }
   
-  dE = (D_dip/4.0*(dE_BB + dE_AB));
-  //std::cout << "dE: " << dE << "\n    " << (D_dip/4.0*(dE_BB + dE_AB)) << std::endl << std::endl;
+  dE = (dE_BB + dE_AB);
   
   //Check if the move is accepted:
   if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
