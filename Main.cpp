@@ -146,7 +146,8 @@ int main(int argc, char** argv)
     fout_bins.open(binsFileName);
     fout_bins.precision(15);
     fout_bins << "# binNum \t e \t\t\t"
-              << "mAx \t\t\t mAz \t\t\t mBy \t\t\t mBz " << std::endl;
+              << "mAx \t\t\t mAz \t\t\t mBy \t\t\t mBz \t\t\t"
+              << "msAx\t\t\t msAz\t\t\t msBy\t\t\t msBz " << std::endl;
     
     if( params->printSpins_ )
     {
