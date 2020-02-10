@@ -127,6 +127,19 @@ int main(int argc, char** argv)
     alpha_B[i] = params->randomGen_.randDblExc( 2*PI );
   }
   
+//  for( uint i=0; i<Lx; i=i+2 )
+//  {
+//    std::cout << i << std::endl;
+//    alpha_A[i]   = PI/2.0;
+//    alpha_A[i+1] = PI/2.0;
+//    alpha_B[i]   = 3.0*PI/2.0;
+//    alpha_B[i+1] = 3.0*PI/2.0;
+//  }
+  
+//  printDoubleArray( alpha_B, "  alpha_B", Lx);
+//  printDoubleArray( alpha_A, "  alpha_A", Lx);
+//  std::cout << getEnergy()/(1.0*N_spins);
+  
   std::cout << "\n*** STARTING SIMULATION ***\n" << std::endl;
   sec1 = time (NULL);
   
@@ -259,6 +272,8 @@ double getEnergy()
               - ( 3.0*r_AB_x[iA][jB]*r_AB_y*sin(alpha_A[iA])*sin(alpha_B[jB])/pow(r_AB[iA][jB],5) );
     }
   }
+  
+  //std::cout << "E comps: " << E_AA << "  " << E_BB << "  " << E_AB << std::endl;
   
   return (E_AA + E_BB + E_AB);
 }
@@ -465,10 +480,20 @@ void localUpdate_B(MTRand &randomGen)
   
   dE = (dE_BB + dE_AB);
   
+  //alpha_B[site] += dAlpha;
+  //dE = getEnergy();
+  //alpha_B[site] -= dAlpha;
+  //dE = dE - getEnergy();
+  
   //Check if the move is accepted:
   if( dE<=0 || randomGen.randDblExc() < exp(-dE/T) )
-  { 
+  {
+    //std::cout << "alpha_B[" << site << "]_before = " << alpha_B[site] << std::endl;
+    //std::cout << "E/N = " << getEnergy()/(2.0*Lx) << std::endl;
     alpha_B[site] += dAlpha;
+    //std::cout << "alpha_B[" << site << "]_after  = " << alpha_B[site] << std::endl;
+    //std::cout << "E/N = " << getEnergy()/(2.0*Lx) << std::endl;
+    //std::cout << "dE = " << dE << std::endl << std::endl;
     
     //Ensure alpha: is between 0 and 2*PI:
     while( alpha_B[site] < 0 )

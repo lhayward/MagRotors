@@ -18,7 +18,7 @@ D_dip = MU_0*m**2/(np.pi*d**3); #dipolar energy scale
 
 #---------
 
-Lx = 10
+Lx = 8
 N = 2*Lx
 LDir = "Lx" + str(Lx)
 

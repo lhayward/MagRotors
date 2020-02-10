@@ -40,12 +40,12 @@ bashFileName = "bash_script_input.sh"
 fout = open(bashFileName, 'w')
 
 #### SIMULATION PARAMETERS: ####
-sweepsPerBin=1000
+sweepsPerBin=100
 numBins=1000
 numWarmup = int(0.1*sweepsPerBin*numBins)
 
 tempList =  [0.1, 0.001, 0.0001]
-Lx=10
+Lx=8
 hList = np.linspace(1.5,0.05,num=30).tolist()
 #Lx=4
 #hList = np.linspace(1.5,0.05,num=3).tolist()
