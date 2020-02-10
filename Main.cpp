@@ -116,6 +116,7 @@ int main(int argc, char** argv)
   //print2DDoubleArray( r_AA, Lx, Lx );
   //print2DDoubleArray( r_BB, Lx, Lx );
   //print2DDoubleArray( r_AB, Lx, Lx );
+  //print2DDoubleArray( r_AB_x, Lx, Lx );
   
   //Initialize the angles in sublattice A to be random:
   alpha_A = new double[Lx];
@@ -209,7 +210,7 @@ int main(int argc, char** argv)
         std::cout << "     mAx = " << mAx  << std::endl;
         std::cout << "     mAz = " << mAz  << std::endl;
         std::cout << "     mBy = " << mBy  << std::endl;
-        std::cout << "     mBz = " << mBz  << std::endl;\
+        std::cout << "     mBz = " << mBz  << std::endl;
         std::cout << "    msAx = " << msAx << std::endl;
         std::cout << "    msAz = " << msAz << std::endl;
         std::cout << "    msBy = " << msBy << std::endl;
@@ -403,7 +404,7 @@ void localUpdate(MTRand &randomGen)
 void localUpdate_A(MTRand &randomGen)
 {
   uint   site   = randomGen.randInt(Lx-1); //randomly selected spin location
-  double alphaFrac = 0.1;                  //fraction of circle on while to consider changes
+  double alphaFrac = 1.0;                  //fraction of circle on while to consider changes
   double dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
   double alpha_i = alpha_A[site];          //initial orientation of selected spin
   double alpha_f = alpha_A[site] + dAlpha; //proposed new orientation
@@ -443,7 +444,7 @@ void localUpdate_A(MTRand &randomGen)
 void localUpdate_B(MTRand &randomGen)
 {
   uint   site   = randomGen.randInt(Lx-1); //randomly selected spin location
-  double alphaFrac = 0.1;                  //fraction of circle on while to consider changes
+  double alphaFrac = 1.0;                  //fraction of circle on while to consider changes
   double dAlpha = alphaFrac*2.0*PI*( randomGen.randDblExc() - 0.5 ); //proposed change in alpha
   double alpha_i = alpha_B[site];          //initial orientation of selected spin
   double alpha_f = alpha_B[site] + dAlpha; //proposed new orientation

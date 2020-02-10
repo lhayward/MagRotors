@@ -1,7 +1,7 @@
 #SIMULATION PARAMETERS:
-Temperature List                 = [0.5, 0.1, 0.001, 0.0001]
-Lx                               = 4
-h                                = 2.5
+Temperature List                 = [0.0000001]
+Lx                               = 10
+h                                = 10.0
 Random Generator Seed            = 9999
 Number of Warm-up Sweeps         = 1000
 Number of Sweeps per Bin         = 1000
