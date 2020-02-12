@@ -116,7 +116,7 @@ int main(int argc, char** argv)
   //print2DDoubleArray( r_AA, Lx, Lx );
   //print2DDoubleArray( r_BB, Lx, Lx );
   //print2DDoubleArray( r_AB, Lx, Lx );
-  //print2DDoubleArray( r_AB_x, Lx, Lx );
+  print2DDoubleArray( r_AB_x, Lx, Lx );
   
   //Initialize the angles in sublattice A to be random:
   alpha_A = new double[Lx];
@@ -397,10 +397,19 @@ void initializeDistances()
   {
     for( uint jB=0; jB<Lx; jB++ )
     {
-      rx1 = ( abs(jB+0.5-iA) );
-      rx2 = Lx - rx1;
-      
-      r_AB_x[iA][jB] = std::min(rx1,rx2);
+//      rx1 = ( abs(jB+0.5-iA) );
+//      rx2 = Lx - rx1;
+//      
+//      r_AB_x[iA][jB] = std::min(rx1,rx2);
+//      r_AB[iA][jB]   = pow( pow(r_AB_x[iA][jB],2) + pow(r_AB_y,2) , 0.5);
+
+      rx1 = jB+0.5-iA;
+      rx2 = rx1 - Lx;
+    
+      if(abs(rx1) < abs(rx2))
+      { r_AB_x[iA][jB] = rx1; }
+      else
+      { r_AB_x[iA][jB] = rx2; }
       r_AB[iA][jB]   = pow( pow(r_AB_x[iA][jB],2) + pow(r_AB_y,2) , 0.5);
     } //j
   } //i

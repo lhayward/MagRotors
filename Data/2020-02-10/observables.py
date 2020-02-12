@@ -26,7 +26,10 @@ tempList =  [0.1, 0.001, 0.0001]
 T = min(tempList)
 #T = 0.1
 
-h_list = np.linspace(1.5,0.05,num=30).tolist()
+#h_list = np.linspace(1.5,0.05,num=30).tolist()
+h1 = np.linspace(1.5,0.35,num=24)
+h2 = np.linspace(0.3,0.01,num=30)
+h_list = np.concatenate([h1,h2])
 
 e_list      = []
 Cv_list     = []

@@ -40,13 +40,16 @@ bashFileName = "bash_script_input.sh"
 fout = open(bashFileName, 'w')
 
 #### SIMULATION PARAMETERS: ####
-sweepsPerBin=100
+sweepsPerBin=1000
 numBins=1000
 numWarmup = int(0.1*sweepsPerBin*numBins)
 
 tempList =  [0.1, 0.001, 0.0001]
 Lx=8
-hList = np.linspace(1.5,0.05,num=30).tolist()
+#hList = np.linspace(1.5,0.05,num=30).tolist()
+h1 = np.linspace(1.5,0.35,num=24)
+h2 = np.linspace(0.3,0.01,num=30)
+h_list = np.concatenate([h1,h2])
 #Lx=4
 #hList = np.linspace(1.5,0.05,num=3).tolist()
 print_spins = 0
@@ -59,7 +62,7 @@ fout.write( "cd " + LDir + "\n\n")
 fout.write( "cp " + "../" + execProg + " . \n\n" )
     
 #Loop over data sets:
-for h in hList:
+for h in h_list:
   
   tag = "h" + str('%1.2f'%h) + "_" + LDir
   seed = random.randint(0,1e10)
@@ -69,8 +72,8 @@ for h in hList:
   outFileName = "output_" + tag + ".txt"
 
   submitCmd = "  ./" + execProg + " " + tag + " > " + outFileName
-  fout.write( "  echo " + '"' + submitCmd + '"' + "\n\n")
-  fout.write(submitCmd + "\n")
+  fout.write( "  echo " + '"' + submitCmd + '"' + "\n")
+  fout.write(submitCmd + "\n\n")
 
 #end of h loop
 
